@@ -10,7 +10,7 @@
 #include "Gwen/Gwen.h"
 #include "Gwen/BaseRender.h"
 #include <SFML/Graphics/Color.hpp>
-#include <SFML/Graphics/RectangleShape.hpp>
+#include <SFML/Graphics/Image.hpp>
 
 namespace sf { class RenderTarget; }
 
@@ -43,14 +43,18 @@ namespace Gwen
 				void FreeTexture( Gwen::Texture* pTexture );
 				Gwen::Color PixelColour( Gwen::Texture* pTexture, unsigned int x, unsigned int y, const Gwen::Color& col_default );
 
+                virtual void DrawShavedCornerRect( Gwen::Rect rect, bool bSlight = false );
                 virtual void DrawLinedRect( Gwen::Rect rect );
+                virtual void StartImage( Gwen::Rect rect );
+                virtual void EndImage();
 				virtual void DrawPixel( int x, int y );
 
 			protected:
 
 				sf::RenderTarget&	m_Target;
 				sf::Color			m_Color;
-                sf::RectangleShape  m_pixelShape;
+                sf::Image           m_Image;
+                Gwen::Rect          m_ImageRect;
 
 		};
 	}

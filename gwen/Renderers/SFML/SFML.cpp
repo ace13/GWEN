@@ -22,7 +22,7 @@ namespace Gwen
         };
 
 
-		SFML::SFML( sf::RenderTarget& target ) : m_Target(target), m_pixelShape( sf::Vector2f( 1, 1 ) )
+		SFML::SFML( sf::RenderTarget& target ) : m_Target(target)
 		{
 		}
 
@@ -53,6 +53,40 @@ namespace Gwen
 			m_Target.Draw( sf::Shape::Rectangle( rect.x, rect.y, rect.x + rect.w, rect.y + rect.h, m_Color ) );
 #endif
 		}
+        
+        void SFML::DrawShavedCornerRect( Gwen::Rect rect, bool bSlight )
+        {
+#if SFML_VERSION_MAJOR == 2
+            Translate( rect );
+
+#define VERT(X, Y) sf::Vertex(sf::Vector2f(X,Y),m_Color)
+
+            sf::Vertex verts[] = { VERT(rect.x + 1, rect.y), VERT(rect.x + rect.w - 1, rect.y),
+                                   VERT(rect.x + rect.w, rect.y + 1), VERT(rect.x + rect.w, rect.y + rect.h - 1),
+                                   VERT(rect.x + rect.w - 1, rect.y + rect.h), VERT(rect.x + 1, rect.y + rect.h),
+                                   VERT(rect.x, rect.y + rect.h - 1), VERT(rect.x, rect.y + 1),
+                                   VERT(rect.x + 1, rect.y) };
+
+            if (!bSlight)
+            {
+                verts[0].position.x += 1;
+                verts[1].position.x -= 1;
+                verts[2].position.y += 1;
+                verts[3].position.y -= 1;
+                verts[4].position.x -= 1;
+                verts[5].position.x += 1;
+                verts[6].position.y -= 1;
+                verts[7].position.y += 1;
+                verts[8].position.x += 1;
+            }
+
+#undef VERT
+
+            m_Target.draw( verts, 9, sf::PrimitiveType::LinesStrip );
+#else
+            Base::DrawShavedCornerRect( rect, bSlight );
+#endif
+        }
 
         void SFML::DrawLinedRect( Gwen::Rect rect )
         {
@@ -71,14 +105,43 @@ namespace Gwen
 #endif
         }
 
+        void SFML::StartImage( Gwen::Rect rect )
+        {
+            m_ImageRect = rect;
+            Translate( m_ImageRect );
+
+            m_Image.create(rect.w, rect.h);
+        }
+
+        void SFML::EndImage()
+        {
+            sf::Texture imageTex;
+            imageTex.loadFromImage( m_Image );
+            
+            sf::RectangleShape rectShape( sf::Vector2f( m_ImageRect.w, m_ImageRect.h ) );
+			rectShape.setPosition( m_ImageRect.x, m_ImageRect.y );
+			rectShape.setTexture( &imageTex );
+
+            m_Target.draw( rectShape );
+
+            m_Image = sf::Image();
+        }
+
         void SFML::DrawPixel( int x, int y )
         {
 #if SFML_VERSION_MAJOR == 2
-            Translate( x, y );
+            if (m_Image.getSize() != sf::Vector2u())
+            {
+                m_Image.setPixel(x, y, m_Color);
+            }
+            else
+            {
+                Translate( x, y );
 
-            sf::Vertex vert( sf::Vector2f( x, y ), m_Color );
+                sf::Vertex vert( sf::Vector2f( x, y ), m_Color );
 
-            m_Target.draw( &vert, 1, sf::PrimitiveType::Points );
+                m_Target.draw( &vert, 1, sf::PrimitiveType::Points );
+            }
 #else
             Base::DrawPixel( x, y );
 #endif

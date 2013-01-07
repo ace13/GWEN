@@ -221,6 +221,8 @@ void ColorLerpBox::Render( Gwen::Skin::Base* skin )
 {
 	//Is there any way to move this into skin? Not for now, no idea how we'll "actually" render these
 	BaseClass::Render( skin );
+
+    skin->GetRender()->StartImage( Rect( 0, 0, Width(), Height() ) );
 	for ( int x = 0; x<Width(); x++)
 	{
 		for ( int y = 0; y<Height(); y++)
@@ -229,6 +231,7 @@ void ColorLerpBox::Render( Gwen::Skin::Base* skin )
 			skin->GetRender()->DrawPixel( x, y );
 		}
 	}
+    skin->GetRender()->EndImage();
 
 	skin->GetRender()->SetDrawColor( Gwen::Color( 0, 0, 0, 255 ) );
 	skin->GetRender()->DrawLinedRect( GetRenderBounds() );
